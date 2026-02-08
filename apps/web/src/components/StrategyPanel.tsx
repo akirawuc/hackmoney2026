@@ -42,10 +42,10 @@ function buildConfig(strategies: StrategyUI[]): AgentConfig {
       rebalance: {
         enabled: isEnabled('rebalance'),
         targetAllocations: {
-          '8453:USDC': 40,
-          '8453:WETH': 30,
-          '42161:USDC': 20,
-          '42161:WETH': 10,
+          '84532:USDC': 40,
+          '84532:WETH': 30,
+          '421614:USDC': 20,
+          '421614:WETH': 10,
         },
         rebalanceThreshold: 5,
       },
@@ -77,9 +77,9 @@ function buildPortfolioState(address: string): PortfolioState {
   return {
     address: address as `0x${string}`,
     balances: {
-      8453: [
+      84532: [
         {
-          token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          token: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
           symbol: 'USDC',
           decimals: 6,
           balance: BigInt('500000000'),
@@ -93,16 +93,16 @@ function buildPortfolioState(address: string): PortfolioState {
           valueUsd: 375,
         },
       ],
-      42161: [
+      421614: [
         {
-          token: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+          token: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
           symbol: 'USDC',
           decimals: 6,
           balance: BigInt('250000000'),
           valueUsd: 250,
         },
         {
-          token: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+          token: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73',
           symbol: 'WETH',
           decimals: 18,
           balance: BigInt('50000000000000000'),

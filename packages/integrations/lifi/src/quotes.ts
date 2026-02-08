@@ -86,10 +86,10 @@ export function estimateBridgeTime(
 ): number {
   // Bridge time estimates in seconds
   const estimates: Record<string, number> = {
-    '8453-42161': 120, // Base -> Arbitrum
-    '42161-8453': 120, // Arbitrum -> Base
-    '8453-1': 900, // Base -> Ethereum
-    '42161-1': 900, // Arbitrum -> Ethereum
+    '84532-421614': 120, // Base Sepolia -> Arbitrum Sepolia
+    '421614-84532': 120, // Arbitrum Sepolia -> Base Sepolia
+    '84532-1': 900, // Base Sepolia -> Ethereum
+    '421614-1': 900, // Arbitrum Sepolia -> Ethereum
   };
 
   const key = `${fromChainId}-${toChainId}`;

@@ -4,10 +4,10 @@ export const StrategyConfigSchema = z.object({
   rebalance: z.object({
     enabled: z.boolean().default(true),
     targetAllocations: z.record(z.string(), z.number()).default({
-      '8453:USDC': 40,
-      '8453:WETH': 30,
-      '42161:USDC': 20,
-      '42161:WETH': 10,
+      '84532:USDC': 40,
+      '84532:WETH': 30,
+      '421614:USDC': 20,
+      '421614:WETH': 10,
     }),
     rebalanceThreshold: z.number().min(1).max(50).default(5),
   }),

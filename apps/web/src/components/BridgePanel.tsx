@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatUnits, parseUnits } from 'viem';
-import { base, arbitrum } from 'wagmi/chains';
+import { baseSepolia, arbitrumSepolia } from 'wagmi/chains';
 
 interface BridgeQuote {
   fromAmount: bigint;
@@ -13,8 +13,8 @@ interface BridgeQuote {
 }
 
 const CHAINS = [
-  { id: base.id, name: 'Base', icon: '🔵' },
-  { id: arbitrum.id, name: 'Arbitrum', icon: '🔷' },
+  { id: baseSepolia.id, name: 'Base Sepolia', icon: '🔵' },
+  { id: arbitrumSepolia.id, name: 'Arb Sepolia', icon: '🔷' },
 ];
 
 export function BridgePanel() {

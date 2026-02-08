@@ -1,6 +1,6 @@
 import { type Address, type Hash } from 'viem';
 
-export type ChainId = 8453 | 42161; // Base | Arbitrum
+export type ChainId = 84532 | 421614; // Base Sepolia | Arbitrum Sepolia
 
 export interface TokenBalance {
   token: Address;

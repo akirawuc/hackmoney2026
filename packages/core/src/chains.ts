@@ -1,38 +1,38 @@
 import { type Chain } from 'viem';
-import { base, arbitrum } from 'viem/chains';
+import { baseSepolia, arbitrumSepolia } from 'viem/chains';
 
 export const SUPPORTED_CHAINS = {
   base: {
-    ...base,
+    ...baseSepolia,
     rpcUrls: {
       default: {
-        http: ['https://mainnet.base.org'],
+        http: ['https://sepolia.base.org'],
       },
     },
   },
   arbitrum: {
-    ...arbitrum,
+    ...arbitrumSepolia,
     rpcUrls: {
       default: {
-        http: ['https://arb1.arbitrum.io/rpc'],
+        http: ['https://sepolia-rollup.arbitrum.io/rpc'],
       },
     },
   },
 } as const satisfies Record<string, Chain>;
 
 export const CHAIN_IDS = {
-  base: 8453,
-  arbitrum: 42161,
+  base: 84532,
+  arbitrum: 421614,
 } as const;
 
 export const TOKEN_ADDRESSES = {
   [CHAIN_IDS.base]: {
-    USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const,
+    USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const,
     WETH: '0x4200000000000000000000000000000000000006' as const,
   },
   [CHAIN_IDS.arbitrum]: {
-    USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as const,
-    WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1' as const,
+    USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' as const,
+    WETH: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73' as const,
   },
 } as const;
 

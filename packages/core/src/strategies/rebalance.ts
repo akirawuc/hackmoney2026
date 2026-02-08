@@ -1,4 +1,4 @@
-import type { AgentConfig, Decision, ExecutionResult, PortfolioState, Strategy } from '../types';
+import type { AgentConfig, ChainId, Decision, ExecutionResult, PortfolioState, Strategy } from '../types';
 import { CHAIN_IDS, TOKEN_ADDRESSES } from '../chains';
 
 type RebalanceConfig = AgentConfig['strategies']['rebalance'];
@@ -49,7 +49,7 @@ export class RebalanceStrategy implements Strategy {
 
     // Determine rebalance direction
     const [chainIdStr, symbol] = deviatingAsset.split(':');
-    const chainId = parseInt(chainIdStr) as 8453 | 42161;
+    const chainId = parseInt(chainIdStr) as ChainId;
     const needsMore = currentAllocation < targetAllocation;
 
     // Simple rebalance: sell overweight asset for underweight asset

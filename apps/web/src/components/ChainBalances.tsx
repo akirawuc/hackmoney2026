@@ -1,17 +1,17 @@
 'use client';
 
 import { useAccount, useBalance } from 'wagmi';
-import { base, arbitrum } from 'wagmi/chains';
+import { baseSepolia, arbitrumSepolia } from 'wagmi/chains';
 import { formatUnits } from 'viem';
 
 const TOKENS = {
-  [base.id]: {
-    USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const,
+  [baseSepolia.id]: {
+    USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const,
     WETH: '0x4200000000000000000000000000000000000006' as const,
   },
-  [arbitrum.id]: {
-    USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' as const,
-    WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1' as const,
+  [arbitrumSepolia.id]: {
+    USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d' as const,
+    WETH: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73' as const,
   },
 };
 
@@ -100,8 +100,8 @@ export function ChainBalances() {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold text-white">Portfolio</h2>
       <div className="grid gap-4">
-        <ChainCard chainId={base.id} chainName="Base" icon="🔵" />
-        <ChainCard chainId={arbitrum.id} chainName="Arbitrum" icon="🔷" />
+        <ChainCard chainId={baseSepolia.id} chainName="Base Sepolia" icon="🔵" />
+        <ChainCard chainId={arbitrumSepolia.id} chainName="Arbitrum Sepolia" icon="🔷" />
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
-import type { AgentConfig, Decision, ExecutionResult, PortfolioState, Strategy } from '../types';
+import type { AgentConfig, ChainId, Decision, ExecutionResult, PortfolioState, Strategy } from '../types';
 import { CHAIN_IDS, TOKEN_ADDRESSES } from '../chains';
 
 type YieldConfig = AgentConfig['strategies']['yield'];
 
 interface YieldOpportunity {
   protocol: string;
-  chainId: 8453 | 42161;
+  chainId: ChainId;
   token: `0x${string}`;
   apy: number;
   tvl: bigint;
@@ -88,7 +88,7 @@ export class YieldStrategy implements Strategy {
 
   private findIdleBalance(
     state: PortfolioState,
-    chainId: 8453 | 42161
+    chainId: ChainId
   ): { token: `0x${string}`; balance: bigint } | null {
     const balances = state.balances[chainId];
     if (!balances) return null;

@@ -1,4 +1,4 @@
-import type { AgentConfig, Decision, ExecutionResult, PortfolioState, Strategy } from '../types';
+import type { AgentConfig, ChainId, Decision, ExecutionResult, PortfolioState, Strategy } from '../types';
 import { CHAIN_IDS, TOKEN_ADDRESSES } from '../chains';
 
 type ArbitrageConfig = AgentConfig['strategies']['arbitrage'];
@@ -52,8 +52,8 @@ export class ArbitrageStrategy implements Strategy {
   }
 
   private findArbitrageOpportunity(state: PortfolioState): {
-    fromChain: 8453 | 42161;
-    toChain: 8453 | 42161;
+    fromChain: ChainId;
+    toChain: ChainId;
     profitBps: number;
     amount: bigint;
   } | null {
