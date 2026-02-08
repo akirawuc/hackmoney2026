@@ -1,86 +1,184 @@
-# AgentFlow DeFi - Product Requirements Document
+# AgentFlow DeFi
 
-**Version:** 1.0  
-**Date:** January 30, 2026  
-**Project:** HackMoney 2026 Submission  
+[![HackMoney 2026](https://img.shields.io/badge/HackMoney-2026-orange)](https://ethglobal.com/events/hackmoney2026)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.26-blue)](https://soliditylang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-## Executive Summary
-AgentFlow DeFi is an autonomous AI-powered cross-chain DeFi agent platform that intelligently manages liquidity positions, executes trading strategies, and optimizes capital allocation. It leverages Yellow Network's instant off-chain settlement, Uniswap v4's programmable hooks, LI.FI's cross-chain routing, and Arc's USDC liquidity hub.
+**Autonomous AI-powered cross-chain DeFi agent platform** that intelligently manages trading strategies, executes cross-chain rebalancing, and optimizes capital allocation across Base and Arbitrum.
 
-## 1. Product Vision & Objectives
-Enable autonomous, intelligent, and privacy-preserving DeFi operations across multiple chains through AI agents that execute strategies faster and cheaper than manual trading.
+## Architecture
 
-## 2. Technical Architecture
-### 2.1 Core Components
-- **Agent Orchestration**: Python-based decision engine managing risk and strategy.
-- **Execution Layer**: 
-  - **Yellow Network**: Instant, gasless off-chain transactions via state channels.
-  - **Uniswap v4**: Programmable on-chain liquidity via custom hooks.
-  - **LI.FI**: Seamless cross-chain routing and bridging.
-  - **Arc (Circle)**: Central USDC settlement layer and RWA signals.
-- **Identity & Config**: **ENS** for agent naming and configuration storage in text records.
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (Next.js + wagmi)"]
+        Dashboard[Dashboard UI]
+        HookStatus[Hook Status]
+        StratPanel[Strategy Panel]
+        BridgeUI[Bridge Panel]
+    end
 
-### 2.2 Data Models
-- **Users**: ENS name, wallet mapping.
-- **Agent Config**: Strategy params, risk thresholds, target chains.
-- **Transactions**: History across all chains, gas savings logs.
+    subgraph Core["Core Engine (@agentflow/core)"]
+        Engine[Agent Engine]
+        Rebalance[Rebalance Strategy]
+        Arbitrage[Arbitrage Strategy]
+        Yield[Yield Strategy]
+    end
 
-## 3. Feature Requirements
-### 3.1 MVP Features (P0)
-- **F1: Multi-Chain Dashboard**: Real-time view of assets on Ethereum, Arbitrum, Base, and Polygon.
-- **F2: ENS Config Management**: Load agent strategies directly from ENS text records.
-- **F3: Yellow Session Trading**: Execute 100+ micro-swaps per session with zero gas.
-- **F4: Cross-Chain Rebalancing**: Detect yield gaps and bridge assets via LI.FI.
-- **F5: Uniswap v4 Privacy Hooks**: Prevent MEV via batch execution hooks.
-- **F6: Arc USDC Liquidity Hub**: Centralized USDC movement using Circle Bridge Kit.
-- **F7: RWA Signals**: Integrate Stork oracle prices (Gold/Oil) to trigger defensive strategies.
+    subgraph Integrations
+        Yellow[Yellow Network\nGasless Sessions]
+        LiFi[LI.FI\nCross-Chain Bridge]
+        ENS[ENS\nConfig Storage]
+    end
 
-## 4. Sponsor Bounty Alignment
-| Sponsor | Bounty Target | Prize | Key Integration |
-| :--- | :--- | :--- | :--- |
-| **Yellow** | Instant Off-chain Logic | $15,000 | Nitrolite state channels for gasless trading |
-| **Uniswap** | Agentic Finance + Privacy | $10,000 | v4 Hooks for batching and autonomous LP |
-| **Arc** | Liquidity Hub + RWAs | $10,000 | USDC hub on Arc + Stork oracle signals |
-| **LI.FI** | AI x LI.FI Smart App | $6,000 | LI.FI Composer for agent-driven bridging |
-| **ENS** | Creative DeFi Naming | $5,000 | Storing agent strategies in text records |
+    subgraph Contracts["Smart Contracts (Uniswap v4)"]
+        Hook[AgentFlowHook\nAuthorization + Risk Controls]
+        PM[Uniswap v4 PoolManager]
+    end
 
-## 5. Implementation Roadmap
-- **Day 1-3**: Core agent logic, wallet integration, and multi-chain dashboard.
-- **Day 4-6**: Yellow session implementation and LI.FI cross-chain routing.
-- **Day 7-9**: Uniswap v4 hooks, Arc setup, and ENS config loader.
-- **Day 10**: Demo video production and documentation finalization.
+    subgraph Chains
+        Base[Base]
+        Arb[Arbitrum]
+    end
 
-## 6. Implementation Details
+    Dashboard --> Engine
+    StratPanel --> Engine
+    Engine --> Rebalance
+    Engine --> Arbitrage
+    Engine --> Yield
+    Engine --> Yellow
+    Engine --> LiFi
+    Dashboard --> ENS
+    HookStatus --> Hook
+    Hook --> PM
+    Yellow --> Base
+    Yellow --> Arb
+    LiFi --> Base
+    LiFi --> Arb
+    BridgeUI --> LiFi
+```
 
-### 6.1 Yellow Network (Gasless Sessions)
-- **SDK**: `yellow-sdk-js`
-- **Logic**: 
-  - Initialize session: `const session = await yellow.createSession({ deposit: 1000, asset: 'USDC' })`
-  - Execute off-chain: `await session.execute({ action: 'swap', pair: 'ETH/USDC', amount: 0.1 })`
-  - On-chain settlement: `await session.settle()` triggers smart contract reconciliation.
-- **Goal**: Minimize per-tx cost to $0 via Nitrolite state channels.
+## Features
 
-### 6.2 Uniswap v4 (Programmable Liquidity)
-- **Hooks**:
-  - `beforeSwap`: Check agent authorization and enforce risk limits.
-  - `afterSwap`: Batch execution for privacy and to prevent front-running.
-- **Bounty Requirement**: Demonstrate agentic management of v4 pools using `IPoolManager`.
-- **Privacy**: Use time-weighted average pricing (TWAP) and batching to obscure intent.
+- **Multi-Chain Dashboard** — Real-time portfolio view across Base and Arbitrum with token balances
+- **AI Strategy Engine** — Pluggable strategy system (rebalance, arbitrage, yield) with confidence scoring
+- **Uniswap v4 Hook** — On-chain authorization and risk controls via `beforeSwap`/`afterSwap` hooks
+- **Yellow Network Sessions** — Gasless off-chain trading via state channels (save ~$0.50/trade)
+- **Cross-Chain Bridging** — LI.FI-powered bridge routing between Base and Arbitrum
+- **ENS Configuration** — Decentralized agent config stored in ENS text records
+- **Risk Management** — Max swap size limits, daily volume caps, and slippage controls
+- **Privacy Protection** — Batch tracking per block to obscure individual agent intent
 
-### 6.3 Arc & Circle (Cross-chain USDC Hub)
-- **Tooling**: Circle SDK + Bridge Kit.
-- **Workflow**:
-  - Receive USDC on Arc (Economic OS layer).
-  - Use `CircleBridgeKit` to move liquidity to high-yield chains (Arbitrum/Optimism).
-  - Integrate **Stork Oracle** to monitor RWA price feeds (Gold/Oil) via `stork-client`.
-  - Strategy: "Flight to Stability" - automatically move assets to USDC on Arc when market volatility (from Stork feeds) exceeds 20%.
+## Deployed Contracts
 
-### 6.4 LI.FI (Execution Layer)
-- **SDK**: `@lifi/sdk`
-- **Integration**: Use **LI.FI Composer** to chain multi-step actions (Bridge -> Swap -> Deposit into Aave) in a single user transaction intent.
-- **AI Agent Integration**: Agent monitors LI.FI quotes to optimize bridge timing.
+| Chain | Contract | Address | Explorer |
+|-------|----------|---------|----------|
+| Base Sepolia | AgentFlowHook | `0x6d8d177010eA33c8A83246A5546C5C6bab5e8e41` | [View on Basescan](https://sepolia.basescan.org/address/0x6d8d177010eA33c8A83246A5546C5C6bab5e8e41) |
 
-### 6.5 ENS (Decentralized Config)
-- **Schema**: Store strategy JSON in `agentflow.strategy` text record.
-- **Lookup**: `const resolver = await provider.getResolver('agent.eth'); const config = await resolver.getText('agentflow.strategy');`
-- **UX**: Use human-readable names instead of 0x addresses for all agent destinations.
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14, React 18, Tailwind CSS, RainbowKit, wagmi |
+| Core Engine | TypeScript, Zod validation, pluggable strategy pattern |
+| Smart Contracts | Solidity 0.8.26, Foundry, Uniswap v4 hooks |
+| Integrations | Yellow Network SDK, LI.FI SDK, ENS (viem) |
+| Package Management | pnpm workspaces monorepo |
+
+## Project Structure
+
+```
+agentflow-defi/
+├── apps/
+│   └── web/                    # Next.js frontend dashboard
+│       └── src/
+│           ├── app/            # Next.js app router
+│           ├── components/     # React components
+│           │   ├── WalletConnect.tsx
+│           │   ├── ChainBalances.tsx
+│           │   ├── SessionPanel.tsx
+│           │   ├── StrategyPanel.tsx
+│           │   ├── BridgePanel.tsx
+│           │   ├── HookStatus.tsx
+│           │   ├── ENSConfig.tsx
+│           │   └── ActivityLog.tsx
+│           ├── contracts/      # ABI + deployed addresses
+│           └── lib/            # wagmi config
+├── packages/
+│   ├── core/                   # Agent engine + strategies
+│   │   └── src/
+│   │       ├── engine.ts       # Central orchestration
+│   │       ├── executor.ts     # Decision routing
+│   │       ├── types.ts        # Shared types
+│   │       └── strategies/     # Rebalance, Arbitrage, Yield
+│   └── integrations/
+│       ├── ens/                # ENS config loader
+│       ├── lifi/               # LI.FI bridge router
+│       └── yellow/             # Yellow Network sessions
+├── contracts/                  # Solidity smart contracts
+│   ├── src/
+│   │   ├── AgentFlowHook.sol           # Uniswap v4 hook
+│   │   └── AgentFlowHookDeployable.sol # Testnet-deployable version
+│   ├── test/                   # Foundry tests
+│   └── script/                 # Deployment scripts
+└── docs/                       # Documentation
+```
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js >= 18
+- pnpm >= 9
+- Foundry (for contracts)
+
+### Install & Run
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run frontend dev server
+pnpm dev
+
+# Build all packages
+pnpm build
+```
+
+### Smart Contracts
+
+```bash
+cd contracts
+
+# Install Foundry dependencies
+forge install
+
+# Run tests
+forge test
+
+# Deploy to Base Sepolia
+source ../.env
+forge script script/DeploySimple.s.sol:DeploySimple \
+  --rpc-url https://sepolia.base.org --broadcast
+```
+
+## Sponsor Bounty Alignment
+
+| Sponsor | Integration | How It's Used |
+|---------|------------|---------------|
+| **Yellow Network** | State channel sessions | Gasless off-chain trading — execute 100+ micro-swaps per session with zero gas |
+| **Uniswap v4** | Custom hook (`AgentFlowHook`) | `beforeSwap` authorization + risk limits, `afterSwap` batch tracking for privacy |
+| **LI.FI** | Bridge routing SDK | Cross-chain USDC bridging between Base and Arbitrum via Stargate |
+| **ENS** | Text record config | Agent strategies stored as JSON in `agentflow.strategy` ENS text records |
+
+## Documentation
+
+- [Architecture](docs/architecture.md) — System design and component details
+- [Contracts](contracts/README.md) — Smart contract documentation and deployment guide
+- [Submission](docs/submission.md) — HackMoney submission descriptions
+- [PRD](docs/prd.md) — Original product requirements document
+
+## License
+
+MIT

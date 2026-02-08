@@ -16,8 +16,16 @@ AgentFlowHook is a Uniswap v4 hook contract that allows AI agents to execute swa
 | Contract | Description |
 |----------|-------------|
 | `src/AgentFlowHook.sol` | Main hook contract with authorization and risk controls |
-| `src/HookMiner.sol` | Utility for mining hook addresses with required flags |
-| `script/DeployAgentFlowHook.s.sol` | Foundry deployment script |
+| `src/AgentFlowHookDeployable.sol` | Testnet-deployable version (skips address validation) |
+| `script/DeploySimple.s.sol` | Simple deployment script for testnets |
+| `script/DeployAgentFlowHook.s.sol` | Production deployment script with CREATE2 salt mining |
+| `script/HookMiner.sol` | Utility for mining hook addresses with required flags |
+
+## Deployed Addresses
+
+| Chain | Contract | Address | Explorer |
+|-------|----------|---------|----------|
+| Base Sepolia | AgentFlowHook | `0x6d8d177010eA33c8A83246A5546C5C6bab5e8e41` | [Basescan](https://sepolia.basescan.org/address/0x6d8d177010eA33c8A83246A5546C5C6bab5e8e41) |
 
 ## Uniswap v4 PoolManager Addresses
 
@@ -32,7 +40,7 @@ AgentFlowHook is a Uniswap v4 hook contract that allows AI agents to execute swa
 ```bash
 forge install        # Install dependencies
 forge build          # Compile contracts
-forge test           # Run tests (6 tests)
+forge test           # Run tests (15 tests)
 forge fmt            # Format code
 ```
 
@@ -50,7 +58,11 @@ DAILY_VOLUME_LIMIT=1000000000000000000000 # 1000 ETH in wei
 2. Deploy to your target network:
 
 ```bash
-forge script script/DeployAgentFlowHook.s.sol --rpc-url base_sepolia --broadcast
+# Simple deployment (testnet, skips hook address validation)
+forge script script/DeploySimple.s.sol:DeploySimple --rpc-url base_sepolia --broadcast
+
+# Production deployment (requires CREATE2 salt mining for correct hook address flags)
+forge script script/DeployAgentFlowHook.s.sol:DeployAgentFlowHook --rpc-url base_sepolia --broadcast
 ```
 
 ## Environment Variables
@@ -94,5 +106,9 @@ The test suite covers:
 - Agent authorization flows
 - Swap size limit enforcement
 - Daily volume tracking and limits
-- Batch tracking functionality
+- Daily volume reset after 24 hours
+- Batch tracking (swapsPerBlock) functionality
 - Owner access controls
+- `beforeSwap` revert conditions (unauthorized, oversized, volume exceeded)
+- `afterSwap` event emission
+- Hook data decoding (agent from hookData vs sender fallback)

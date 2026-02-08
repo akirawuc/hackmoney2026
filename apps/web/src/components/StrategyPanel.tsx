@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { useAccount } from 'wagmi';
+import { AgentEngine } from '@agentflow/core';
+import type { AgentConfig, PortfolioState, Decision } from '@agentflow/core';
 
-interface Strategy {
+interface StrategyUI {
   id: string;
   name: string;
   description: string;
@@ -11,36 +14,129 @@ interface Strategy {
   lastDecision?: string;
 }
 
-const DEFAULT_STRATEGIES: Strategy[] = [
+const DEFAULT_STRATEGIES: StrategyUI[] = [
   {
     id: 'rebalance',
     name: 'Portfolio Rebalancer',
     description: 'Maintains target allocation across chains and tokens',
     enabled: true,
-    lastRun: '2 min ago',
-    lastDecision: 'Portfolio within target - no action needed',
   },
   {
     id: 'arbitrage',
     name: 'Cross-Chain Arbitrage',
     description: 'Captures price differences between Base and Arbitrum',
     enabled: true,
-    lastRun: '30 sec ago',
-    lastDecision: 'No profitable opportunity (min: 10bps)',
   },
   {
     id: 'yield',
     name: 'Yield Optimizer',
     description: 'Deploys idle assets to yield protocols',
     enabled: false,
-    lastRun: 'Never',
-    lastDecision: 'Strategy disabled',
   },
 ];
 
-export function StrategyPanel() {
+function buildConfig(strategies: StrategyUI[]): AgentConfig {
+  const isEnabled = (id: string) => strategies.find((s) => s.id === id)?.enabled ?? false;
+  return {
+    strategies: {
+      rebalance: {
+        enabled: isEnabled('rebalance'),
+        targetAllocations: {
+          '8453:USDC': 40,
+          '8453:WETH': 30,
+          '42161:USDC': 20,
+          '42161:WETH': 10,
+        },
+        rebalanceThreshold: 5,
+      },
+      arbitrage: {
+        enabled: isEnabled('arbitrage'),
+        minProfitBps: 10,
+        maxSlippageBps: 50,
+      },
+      yield: {
+        enabled: isEnabled('yield'),
+        minApy: 3,
+        protocols: ['aave', 'compound'],
+      },
+    },
+    riskLimits: {
+      maxTradeSize: BigInt('1000000000'),
+      maxDailyVolume: BigInt('10000000000'),
+      maxSlippage: 1,
+    },
+    yellowSession: {
+      autoDeposit: true,
+      depositAmount: BigInt('500000000'),
+      settlementThreshold: BigInt('100000000'),
+    },
+  };
+}
+
+function buildPortfolioState(address: string): PortfolioState {
+  return {
+    address: address as `0x${string}`,
+    balances: {
+      8453: [
+        {
+          token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          symbol: 'USDC',
+          decimals: 6,
+          balance: BigInt('500000000'),
+          valueUsd: 500,
+        },
+        {
+          token: '0x4200000000000000000000000000000000000006',
+          symbol: 'WETH',
+          decimals: 18,
+          balance: BigInt('150000000000000000'),
+          valueUsd: 375,
+        },
+      ],
+      42161: [
+        {
+          token: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+          symbol: 'USDC',
+          decimals: 6,
+          balance: BigInt('250000000'),
+          valueUsd: 250,
+        },
+        {
+          token: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+          symbol: 'WETH',
+          decimals: 18,
+          balance: BigInt('50000000000000000'),
+          valueUsd: 125,
+        },
+      ],
+    },
+    totalValueUsd: 1250,
+    lastUpdated: Date.now(),
+  };
+}
+
+function formatDecision(d: Decision): string {
+  const action = d.action.charAt(0).toUpperCase() + d.action.slice(1);
+  return `${action}: ${d.reason} (confidence: ${(d.confidence * 100).toFixed(0)}%)`;
+}
+
+export function StrategyPanel({
+  onStrategyRun,
+}: {
+  onStrategyRun?: (decisions: Decision[]) => void;
+} = {}) {
+  const { address } = useAccount();
   const [strategies, setStrategies] = useState(DEFAULT_STRATEGIES);
   const [isRunning, setIsRunning] = useState(false);
+  const engineRef = useRef<AgentEngine | null>(null);
+
+  const getEngine = useCallback(
+    (strats: StrategyUI[]) => {
+      const config = buildConfig(strats);
+      return new AgentEngine(config);
+    },
+    []
+  );
 
   const toggleStrategy = (id: string) => {
     setStrategies((prev) =>
@@ -50,16 +146,40 @@ export function StrategyPanel() {
 
   const handleRunOnce = async () => {
     setIsRunning(true);
-    // Simulate strategy run
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setStrategies((prev) =>
-      prev.map((s) =>
-        s.enabled
-          ? { ...s, lastRun: 'Just now', lastDecision: 'Evaluated - no action' }
-          : s
-      )
-    );
-    setIsRunning(false);
+    try {
+      const engine = getEngine(strategies);
+      engineRef.current = engine;
+
+      const state = buildPortfolioState(
+        address || '0x0000000000000000000000000000000000000000'
+      );
+      const decisions = await engine.evaluateStrategies(state);
+
+      setStrategies((prev) =>
+        prev.map((s) => {
+          if (!s.enabled) return s;
+          const decision = decisions.find((d) => d.strategy.toLowerCase().includes(s.id));
+          return {
+            ...s,
+            lastRun: 'Just now',
+            lastDecision: decision
+              ? formatDecision(decision)
+              : 'Evaluated - no action needed',
+          };
+        })
+      );
+
+      onStrategyRun?.(decisions);
+    } catch (err) {
+      console.error('Strategy evaluation failed:', err);
+      setStrategies((prev) =>
+        prev.map((s) =>
+          s.enabled ? { ...s, lastRun: 'Just now', lastDecision: 'Error during evaluation' } : s
+        )
+      );
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   return (
@@ -99,16 +219,14 @@ export function StrategyPanel() {
                     {strategy.enabled ? 'Active' : 'Disabled'}
                   </span>
                 </div>
-                <p className="text-slate-400 text-sm mt-1">
-                  {strategy.description}
-                </p>
-                <div className="mt-3 flex gap-4 text-xs">
-                  <span className="text-slate-500">
-                    Last run: {strategy.lastRun}
-                  </span>
-                  <span className="text-slate-500">|</span>
-                  <span className="text-slate-400">{strategy.lastDecision}</span>
-                </div>
+                <p className="text-slate-400 text-sm mt-1">{strategy.description}</p>
+                {strategy.lastRun && (
+                  <div className="mt-3 flex gap-4 text-xs">
+                    <span className="text-slate-500">Last run: {strategy.lastRun}</span>
+                    <span className="text-slate-500">|</span>
+                    <span className="text-slate-400">{strategy.lastDecision}</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => toggleStrategy(strategy.id)}

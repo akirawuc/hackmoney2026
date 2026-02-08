@@ -5,10 +5,29 @@ import { ChainBalances } from '@/components/ChainBalances';
 import { SessionPanel } from '@/components/SessionPanel';
 import { StrategyPanel } from '@/components/StrategyPanel';
 import { BridgePanel } from '@/components/BridgePanel';
+import { HookStatus } from '@/components/HookStatus';
+import { ENSConfig } from '@/components/ENSConfig';
+import { ActivityLog, useActivityLog } from '@/components/ActivityLog';
 import { useAccount } from 'wagmi';
+import type { Decision } from '@agentflow/core';
 
 export default function Home() {
   const { isConnected } = useAccount();
+  const { activities, addActivity } = useActivityLog();
+
+  const handleStrategyRun = (decisions: Decision[]) => {
+    if (decisions.length === 0) {
+      addActivity('strategy_eval', 'All strategies evaluated - no action needed', 'info');
+    } else {
+      for (const d of decisions) {
+        addActivity(
+          'strategy_eval',
+          `${d.strategy}: ${d.action} - ${d.reason}`,
+          'success'
+        );
+      }
+    }
+  };
 
   return (
     <main className="min-h-screen p-8">
@@ -26,20 +45,27 @@ export default function Home() {
 
         {isConnected ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Balances & Session */}
+            {/* Left Column */}
             <div className="space-y-6">
               <ChainBalances />
               <SessionPanel />
+              <HookStatus />
+              <ENSConfig />
             </div>
 
             {/* Center Column - Strategy */}
             <div className="lg:col-span-2">
-              <StrategyPanel />
+              <StrategyPanel onStrategyRun={handleStrategyRun} />
             </div>
 
             {/* Full Width - Bridge */}
             <div className="lg:col-span-3">
               <BridgePanel />
+            </div>
+
+            {/* Full Width - Activity Log */}
+            <div className="lg:col-span-3">
+              <ActivityLog activities={activities} />
             </div>
           </div>
         ) : (
